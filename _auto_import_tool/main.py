@@ -1,16 +1,6 @@
 import os
 import bpy
 
-bl_info = {
-    "name" : "Auto Import Tool",
-    "author" : "Blake Kostroun",
-    "version" : (1, 0),
-    "blender" : (3, 2),
-    "location" : "View 3D > Tool",
-    "warning" : "",
-    "wiki" : "https://www.artstation.com/blakekostroun",
-    "category" : "New Addon",
-}
 
 
 #################################################################      
@@ -67,55 +57,97 @@ class ImportOperator(bpy.types.Operator):
         selected_dir_path = props.my_dir_path
         toggle = props.my_toggle
 
-
         # print(f'Printing Boolean {toggle}')
 
-        dir_path_files = os.listdir(selected_dir_path)
-####
-######
-    # Finding and Storing all files that end with _N and _BC
-    # TODO: Have DICT built inside EACH .FBX found 
+        filePaths = os.listdir(selected_dir_path)
 
-    # TODO: FOCUS ON MINIMAL VIABLE PRODUCT
-    # Can ramp up later to facilitate for numerous fbx files/texture files and edge cases
-######
-####
-    
-        DICT_tex_files = {}
+        print(filePaths)
+        
 
-        for current_file in dir_path_files:
-            current_file_basename = current_file.split(".")[0]
+        DICT_stored_tex_filePaths = self.store_tex_filePaths(filePaths, selected_dir_path)
 
-            if current_file_basename.endswith("_N"):
-                DICT_tex_files['Normal'] = current_file
-            elif current_file_basename.endswith("_BC"):
-                DICT_tex_files['Base_Color'] = current_file
-
-        print(DICT_tex_files)
 
     # # Loops through DIR PATH and imports ALL .FBX files 
     # # and RUNS function create_material()
-        # for current_file in dir_path_files:
-        #     if current_file.endswith(".fbx"):
-        #         print(f"Found an FBX file: {current_file}")
+    #     for filePath in filePaths:
+    #         if filePath.endswith(".fbx"):
+    #             print(f"Found an FBX file: {filePath}")
 
-        #         my_fbx_file = current_file
-        #         my_fbx_path = os.path.join(selected_dir_path, my_fbx_file)
+    #             my_fbx_file = filePath
+    #             my_fbx_path = os.path.join(selected_dir_path, my_fbx_file)
 
-        #         print(my_fbx_path)
+    #             print(my_fbx_path)
 
-        #         # Import the FBX file
-        #         bpy.ops.import_scene.fbx(filepath=my_fbx_path)
+    #             # Import the FBX file
+    #             bpy.ops.import_scene.fbx(filepath=my_fbx_path)
 
-        #         self.create_material()
+    #             self.create_material(DICT_stored_tex_filePaths)
 
-        #         break # DEBUGGING This will exit the loop after the first iteration
+    #             break # DEBUGGING This will exit the loop after the first iteration
         
 
 
         return {'FINISHED'}
     
-    def create_material(self):
+
+    # Finding and Storing all files that end with _N and _BC
+    def store_tex_filePaths(self, filePaths, selected_dir_path):
+
+        DICT_stored_tex_filePaths = {}
+        accepted_fileExtensions = ['.bmp', '.png', '.jpg', '.jpeg', '.tga', '.exr', '.tif', '.tiff']
+        accepted_suffixes = ['N', 'BC']
+
+        for filePath in filePaths:
+
+            # SPLIT filePath extension
+            fileNameWithoutExtension, fileExtension = os.path.splitext(filePath)
+
+            # SPLIT fileName from the RIGHT by "_" and get last part as suffix
+            split_file_name = fileNameWithoutExtension.rsplit("_", 1) # split only once from the right
+
+            try:
+                root, suffix = split_file_name
+            except:
+                # VALIDATE if filePath contains any SUFFIX
+                print(f'SKIPPING - Selected Texture File: "{fileNameWithoutExtension}" DOES NOT CONTAIN A SUFFIX. Full file path: {filePath}')
+                continue
+
+            # FILTER Folders and unaccepted File Extensions
+            if fileExtension not in accepted_fileExtensions:
+                # print(f'SKIPPING File: "{filePath}" with FileExtension: "{fileExtension}" DOES NOT MATCH accepted_fileExtensions')
+                continue
+
+            # FILTER unaccepted suffixes
+            if suffix not in accepted_suffixes:
+                # print(f'SKIPPING File: "{filePath}" with Suffix: "{suffix}" DOES NOT MATCH accepted_suffixes')
+                continue
+
+            # Add new root list
+            if root not in DICT_stored_tex_filePaths: 
+                DICT_stored_tex_filePaths[root] = []
+
+            # GET FULL Texture Path
+            abs_tex_filePath = os.path.join(selected_dir_path, filePath)
+
+            # Create a dictionary entry for the current filepath root
+            DICT_stored_tex_filePaths[root].append({
+                'abs_tex_filePath': abs_tex_filePath,
+                'fileName': fileNameWithoutExtension,
+                'suffix': suffix
+            })
+
+        # # Iterate through the file groups and print configuration
+        # for root_group, files in DICT_stored_tex_filePaths.items():
+        #     print(f'=== Root Group: {root_group}')
+        #     for file_info in files:
+        #         print(f'abs_tex_filePath:          {file_info["abs_tex_filePath"]}')
+        #         print(f'File Name:                  {file_info["fileName"]}')
+        #         print(f'Suffix:                     {file_info["suffix"]}')
+        #         print('-')
+
+        return DICT_stored_tex_filePaths
+
+    def create_material(self, DICT_stored_tex_filePaths):
         my_fbx_data = bpy.context.selected_objects[0]
         my_fbx_name = my_fbx_data.name
 
@@ -127,7 +159,17 @@ class ImportOperator(bpy.types.Operator):
 
         # You can set various properties for the material
         new_mat.diffuse_color = (1, 0, 0, 1)  # Red color (R, G, B, Alpha)
+#####
+# TODO: IMPORT TEXTURES AND CONNECT TO MATERIAL
 
+        # Create a new texture and load an image file
+        texture = bpy.data.textures.new(name="MyTexture", type='IMAGE')
+        image_path = "/path/to/your/texture/image.png"  # Replace with the path to your texture image
+
+        # Load the image into the texture
+        texture.image = bpy.data.images.load(image_path)
+#
+#####
         # Get object by its name AND append material
         my_fbx_data.data.materials.append(new_mat)
 
