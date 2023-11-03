@@ -60,6 +60,9 @@ class ImportOperator(bpy.types.Operator):
 
         filePaths = os.listdir(selected_dir_path)   
 
+#TODO: EXPAND on accepted suffixes
+##          BC, ORM, N
+
     ########
     # CUSTOM SET VALUES
         LIST_accepted_suffixes = ['N', 'BC']  
