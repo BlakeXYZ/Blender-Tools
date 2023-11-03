@@ -56,46 +56,51 @@ class ImportOperator(bpy.types.Operator):
 
         selected_dir_path = props.my_dir_path
         toggle = props.my_toggle
-
         # print(f'Printing Boolean {toggle}')
 
-        filePaths = os.listdir(selected_dir_path)
+        filePaths = os.listdir(selected_dir_path)   
 
-        print(filePaths)
-        
+    ########
+    # CUSTOM SET VALUES
+        LIST_accepted_suffixes = ['N', 'BC']  
+        DICT_match_nodeInput_to_suffix = [
+            {'Base Color':   'BC',  'Node Location':     '-500 , 300'},
+            {'Normal':       'N',   'Node Location':     '-500 , -300'},
+        ]
+    #
+    ########
+   
+        # Run custom func store_tex_filePaths and store in DICT
+        self.DICT_stored_tex_filePaths = self.store_tex_filePaths(filePaths, selected_dir_path, LIST_accepted_suffixes)
 
-        DICT_stored_tex_filePaths = self.store_tex_filePaths(filePaths, selected_dir_path)
+#TODO: ACCEPT MULTIPLE 3D Asset Extensions
 
+    # Loops through DIR PATH and imports ALL .FBX files 
+    # and RUNS function create_material()
 
-    # # Loops through DIR PATH and imports ALL .FBX files 
-    # # and RUNS function create_material()
-    #     for filePath in filePaths:
-    #         if filePath.endswith(".fbx"):
-    #             print(f"Found an FBX file: {filePath}")
+        for filePath in filePaths:
+            if filePath.endswith(".fbx"):
 
-    #             my_fbx_file = filePath
-    #             my_fbx_path = os.path.join(selected_dir_path, my_fbx_file)
+                my_asset_filePath = filePath
+                my_asset_path = os.path.join(selected_dir_path, my_asset_filePath)
 
-    #             print(my_fbx_path)
+                # Import the FBX file
+                bpy.ops.import_scene.fbx(filepath=my_asset_path)
 
-    #             # Import the FBX file
-    #             bpy.ops.import_scene.fbx(filepath=my_fbx_path)
-
-    #             self.create_material(DICT_stored_tex_filePaths)
-
-    #             break # DEBUGGING This will exit the loop after the first iteration
-        
-
+                self.create_material(self.DICT_stored_tex_filePaths, DICT_match_nodeInput_to_suffix, my_asset_filePath)
 
         return {'FINISHED'}
     
 
+    
+#################################################################      
+# CUSTOM FUNCTIONS
+
     # Finding and Storing all files that end with _N and _BC
-    def store_tex_filePaths(self, filePaths, selected_dir_path):
+    def store_tex_filePaths(self, filePaths, selected_dir_path, LIST_accepted_suffixes):
 
         DICT_stored_tex_filePaths = {}
         accepted_fileExtensions = ['.bmp', '.png', '.jpg', '.jpeg', '.tga', '.exr', '.tif', '.tiff']
-        accepted_suffixes = ['N', 'BC']
 
         for filePath in filePaths:
 
@@ -118,7 +123,7 @@ class ImportOperator(bpy.types.Operator):
                 continue
 
             # FILTER unaccepted suffixes
-            if suffix not in accepted_suffixes:
+            if suffix not in LIST_accepted_suffixes:
                 # print(f'SKIPPING File: "{filePath}" with Suffix: "{suffix}" DOES NOT MATCH accepted_suffixes')
                 continue
 
@@ -136,42 +141,90 @@ class ImportOperator(bpy.types.Operator):
                 'suffix': suffix
             })
 
-        # # Iterate through the file groups and print configuration
-        # for root_group, files in DICT_stored_tex_filePaths.items():
-        #     print(f'=== Root Group: {root_group}')
-        #     for file_info in files:
-        #         print(f'abs_tex_filePath:          {file_info["abs_tex_filePath"]}')
-        #         print(f'File Name:                  {file_info["fileName"]}')
-        #         print(f'Suffix:                     {file_info["suffix"]}')
-        #         print('-')
-
         return DICT_stored_tex_filePaths
 
-    def create_material(self, DICT_stored_tex_filePaths):
-        my_fbx_data = bpy.context.selected_objects[0]
-        my_fbx_name = my_fbx_data.name
 
-        print(f'running create material - my_fbx_data  = {my_fbx_data}')
-        print(f'running create material - my_fbx  = {my_fbx_name}')
+    def create_material(self, DICT_stored_tex_filePaths, DICT_match_nodeInput_to_suffix, my_asset_filePath):
+
+        # 3d Asset Filepath Material is being created for
+        print(f'my_asset_filePath - {my_asset_filePath}')
 
         # Create a new material
-        new_mat = bpy.data.materials.new(name="M_" + my_fbx_name)
+        my_obj = bpy.context.selected_objects[0]
+        my_obj_name = my_obj.name
 
-        # You can set various properties for the material
-        new_mat.diffuse_color = (1, 0, 0, 1)  # Red color (R, G, B, Alpha)
-#####
-# TODO: IMPORT TEXTURES AND CONNECT TO MATERIAL
+        # CLEAN UP IMPORTED ASSET
+        if my_obj.data.materials:
+            # remove imported materials
+            for material in my_obj.data.materials:
+                bpy.data.materials.remove(material, do_unlink=True)
+            # remove material slots
+            my_obj.data.materials.clear()
+            
+    
+        new_mat = bpy.data.materials.new(name="M_" + my_obj_name)
 
-        # Create a new texture and load an image file
-        texture = bpy.data.textures.new(name="MyTexture", type='IMAGE')
-        image_path = "/path/to/your/texture/image.png"  # Replace with the path to your texture image
+    #########
+    # IMPORT TEXTURES AND CONNECT TO MATERIAL
 
-        # Load the image into the texture
-        texture.image = bpy.data.images.load(image_path)
-#
-#####
+        # Setup connection to Node tree
+        new_mat.use_nodes = True
+        node_tree = new_mat.node_tree
+
+        # Find the Principled BSDF shader node
+        principled_bsdf = None
+        for node in node_tree.nodes:
+            if node.type == 'BSDF_PRINCIPLED':
+                principled_bsdf = node
+                break
+
+        # Iterate through the file groups and print configuration
+        for root_group, files in DICT_stored_tex_filePaths.items():
+            for file_info in files:
+                abs_tex_filePath = file_info["abs_tex_filePath"]
+                tex_file_name  = file_info["fileName"]
+                suffix = file_info["suffix"]
+
+                # VALIDATE 3D ASSET has same 'ROOT' name as imported tex_filePath's root_group
+                if not my_asset_filePath.startswith(root_group):
+                    print(f'{my_asset_filePath} does not start with {root_group}')
+                    continue
+
+                # with selected SUFFIX, search through DICT and find matching nodeInput
+                for item in DICT_match_nodeInput_to_suffix:
+                    if suffix in item.values():
+                        matching_nodeInput = next(key for key, value in item.items() if value == suffix)
+                        node_location_str = item['Node Location']
+                        node_location = tuple(map(int, node_location_str.split(',')))  # Parsing the values as integers
+                        break
+
+                # Create a texture node
+                texture_node = node_tree.nodes.new(type='ShaderNodeTexImage')
+
+                # Attach image to texture_node
+                texture_node.image =  bpy.data.images.load(abs_tex_filePath)
+
+                # Link the texture to the roughness input
+                node_tree.links.new(texture_node.outputs['Color'], principled_bsdf.inputs[matching_nodeInput])
+
+                # If NOT Base Color, change node color space to Non-Color
+                if matching_nodeInput != 'Base Color':
+                    texture_node.image.colorspace_settings.name = 'Non-Color'
+
+                # INSERT Normal Map node between Normal Tex and Principled BSDF input 
+                if matching_nodeInput == 'Normal':
+                    # Build normal map node
+                    normal_map_node = node_tree.nodes.new(type='ShaderNodeNormalMap')
+                    normal_map_node.location = (-200 , -300)  # Adjust the location as needed
+                    # reconnect links
+                    node_tree.links.new(texture_node.outputs['Color'], normal_map_node.inputs['Color'])
+                    node_tree.links.new(normal_map_node.outputs['Normal'], principled_bsdf.inputs['Normal'])
+
+                # Adjust the texture's location and other properties if necessary
+                texture_node.location = (node_location)  # Adjust the location as needed
+
         # Get object by its name AND append material
-        my_fbx_data.data.materials.append(new_mat)
+        my_obj.data.materials.append(new_mat)
 
     
 
@@ -230,3 +283,17 @@ def unregister():
 
     del bpy.types.Scene.myaddon_properties
 
+
+
+
+
+
+
+    # # Iterate through the file groups and print configuration
+        # for root_group, files in DICT_stored_tex_filePaths.items():
+        #     print(f'=== Root Group: {root_group}')
+        #     for file_info in files:
+        #         print(f'abs_tex_filePath:          {file_info["abs_tex_filePath"]}')
+        #         print(f'File Name:                  {file_info["fileName"]}')
+        #         print(f'Suffix:                     {file_info["suffix"]}')
+        #         print('-')
