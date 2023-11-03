@@ -63,15 +63,14 @@ class ImportOperator(bpy.types.Operator):
 #TODO: EXPAND on accepted suffixes
 ##          BC, ORM, N
 
-    ########
+    ###
     # CUSTOM SET VALUES
         LIST_accepted_suffixes = ['N', 'BC']  
         DICT_match_nodeInput_to_suffix = [
             {'Base Color':   'BC',  'Node Location':     '-500 , 300'},
             {'Normal':       'N',   'Node Location':     '-500 , -300'},
         ]
-    #
-    ########
+    ###
    
         # Run custom func store_tex_filePaths and store in DICT
         self.DICT_stored_tex_filePaths = self.store_tex_filePaths(filePaths, selected_dir_path, LIST_accepted_suffixes)
@@ -156,7 +155,8 @@ class ImportOperator(bpy.types.Operator):
         my_obj = bpy.context.selected_objects[0]
         my_obj_name = my_obj.name
 
-        # CLEAN UP IMPORTED ASSET
+    ###
+    # CLEAN UP IMPORTED ASSET
         if my_obj.data.materials:
             # remove imported materials
             for material in my_obj.data.materials:
@@ -164,10 +164,11 @@ class ImportOperator(bpy.types.Operator):
             # remove material slots
             my_obj.data.materials.clear()
 
-        # Purge unused data without user interaction
+        # Purge unused images without user interaction
         for img in bpy.data.images:
             if not img.users:
                 bpy.data.images.remove(img)
+    ###
             
     
         new_mat = bpy.data.materials.new(name="M_" + my_obj_name)
