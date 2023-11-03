@@ -65,15 +65,18 @@ class ImportOperator(bpy.types.Operator):
 
     ###
     # CUSTOM SET VALUES
-        LIST_accepted_suffixes = ['N', 'BC']  
-        DICT_match_nodeInput_to_suffix = [
-            {'Base Color':   'BC',  'Node Location':     '-500 , 300'},
-            {'Normal':       'N',   'Node Location':     '-500 , -300'},
+        LIST_accepted_fileExtensions_config = ['.bmp', '.png', '.jpg', '.jpeg', '.tga', '.exr', '.tif', '.tiff']
+
+        DICT_tex_suffix_nodeInput_config = [
+            {'Suffix': 'BC',    'Node Input': 'Base Color',            'Node Location':     '-500 ,    300'},
+            {'Suffix': 'ORM',   'Node Input': 'Custom Breakout',       'Node Location':     '-500 ,    000'},
+            {'Suffix': 'N',     'Node Input': 'Normal',                'Node Location':     '-500 ,    -300'},
         ]
+    #
     ###
    
         # Run custom func store_tex_filePaths and store in DICT
-        self.DICT_stored_tex_filePaths = self.store_tex_filePaths(filePaths, selected_dir_path, LIST_accepted_suffixes)
+        self.DICT_stored_tex_filePaths = self.store_tex_filePaths(filePaths, selected_dir_path, LIST_accepted_fileExtensions_config, DICT_tex_suffix_nodeInput_config)
 
 #TODO: ACCEPT MULTIPLE 3D Asset Extensions
 
@@ -89,7 +92,7 @@ class ImportOperator(bpy.types.Operator):
                 # Import the FBX file
                 bpy.ops.import_scene.fbx(filepath=my_asset_path)
 
-                self.create_material(self.DICT_stored_tex_filePaths, DICT_match_nodeInput_to_suffix, my_asset_filePath)
+                self.create_material(my_asset_filePath, self.DICT_stored_tex_filePaths, DICT_tex_suffix_nodeInput_config)
 
         return {'FINISHED'}
     
@@ -99,10 +102,9 @@ class ImportOperator(bpy.types.Operator):
 # CUSTOM FUNCTIONS
 
     # Finding and Storing all files that end with _N and _BC
-    def store_tex_filePaths(self, filePaths, selected_dir_path, LIST_accepted_suffixes):
+    def store_tex_filePaths(self, filePaths, selected_dir_path, LIST_accepted_fileExtensions_config, DICT_tex_suffix_nodeInput_config):
 
         DICT_stored_tex_filePaths = {}
-        accepted_fileExtensions = ['.bmp', '.png', '.jpg', '.jpeg', '.tga', '.exr', '.tif', '.tiff']
 
         for filePath in filePaths:
 
@@ -120,13 +122,14 @@ class ImportOperator(bpy.types.Operator):
                 continue
 
             # FILTER Folders and unaccepted File Extensions
-            if fileExtension not in accepted_fileExtensions:
+            if fileExtension not in LIST_accepted_fileExtensions_config:
                 # print(f'SKIPPING File: "{filePath}" with FileExtension: "{fileExtension}" DOES NOT MATCH accepted_fileExtensions')
                 continue
 
             # FILTER unaccepted suffixes
-            if suffix not in LIST_accepted_suffixes:
-                # print(f'SKIPPING File: "{filePath}" with Suffix: "{suffix}" DOES NOT MATCH accepted_suffixes')
+            # Check if suffix matches any 'Suffix' value in the configuration
+            if not any(config['Suffix'] == suffix for config in DICT_tex_suffix_nodeInput_config):
+                print(f"{filePath}'s suffix '_{suffix}' does not match any config Suffixes")
                 continue
 
             # Add new root list
@@ -146,7 +149,7 @@ class ImportOperator(bpy.types.Operator):
         return DICT_stored_tex_filePaths
 
 
-    def create_material(self, DICT_stored_tex_filePaths, DICT_match_nodeInput_to_suffix, my_asset_filePath):
+    def create_material(self, my_asset_filePath, DICT_stored_tex_filePaths, DICT_tex_suffix_nodeInput_config):
 
         # 3d Asset Filepath Material is being created for
         print(f'my_asset_filePath - {my_asset_filePath}')
@@ -170,7 +173,6 @@ class ImportOperator(bpy.types.Operator):
                 bpy.data.images.remove(img)
     ###
             
-    
         new_mat = bpy.data.materials.new(name="M_" + my_obj_name)
 
     #########
@@ -192,18 +194,18 @@ class ImportOperator(bpy.types.Operator):
             for file_info in files:
                 abs_tex_filePath = file_info["abs_tex_filePath"]
                 tex_file_name  = file_info["fileName"]
-                suffix = file_info["suffix"]
+                current_suffix = file_info["suffix"]
 
                 # VALIDATE 3D ASSET has same 'ROOT' name as imported tex_filePath's root_group
                 if not my_asset_filePath.startswith(root_group):
-                    print(f'{my_asset_filePath} does not start with {root_group}')
+                    print(f'{tex_file_name} root does not match {my_asset_filePath} root')
                     continue
-
-                # with selected SUFFIX, search through DICT and find matching nodeInput
-                for item in DICT_match_nodeInput_to_suffix:
-                    if suffix in item.values():
-                        matching_nodeInput = next(key for key, value in item.items() if value == suffix)
-                        node_location_str = item['Node Location']
+                    
+                # Loop through the config to find matching DICT info for current current suffix
+                for config in DICT_tex_suffix_nodeInput_config:
+                    if config['Suffix'] == current_suffix:
+                        matching_nodeInput = config['Node Input']
+                        node_location_str = config['Node Location']
                         node_location = tuple(map(int, node_location_str.split(',')))  # Parsing the values as integers
                         break
 
@@ -236,8 +238,6 @@ class ImportOperator(bpy.types.Operator):
         my_obj.data.materials.append(new_mat)
 
     
-
-
     
 #################################################################      
 # UI PANELS
@@ -269,28 +269,6 @@ class MYADDON_PT_MyUIPanel(MYADDON_PT_PanelInfo, bpy.types.Panel):
 
  
 
-###########################################################  
-# REGISTRY
-
-classes = [MyProperties,
-           PrintPathOperator, 
-           ImportOperator,
-           MYADDON_PT_MyUIPanel, ]  
-
-def register():
-
-    for cls in classes:
-        bpy.utils.register_class(cls)
-
-    bpy.types.Scene.myaddon_properties = bpy.props.PointerProperty(type=MyProperties)
-
-
-def unregister():
-
-    for cls in classes:
-        bpy.utils.unregister_class(cls)
-
-    del bpy.types.Scene.myaddon_properties
 
 
 

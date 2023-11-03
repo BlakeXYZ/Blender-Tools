@@ -9,13 +9,17 @@ bl_info = {
     "category" : "New Addon",
 }
 
+###  
+######      
+###########################################################  
+###### beginning of REGISTRY BRANCH
+###
+
+
 def register():
+    from .addon.register import register_addon
+    register_addon()
 
-    from .main import register
-    register()
-
-def unregister(): 
-
-    from .main import unregister
-    unregister()
-
+def unregister():
+    from .addon.register import unregister_addon
+    unregister_addon()
