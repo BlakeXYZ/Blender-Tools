@@ -163,6 +163,11 @@ class ImportOperator(bpy.types.Operator):
                 bpy.data.materials.remove(material, do_unlink=True)
             # remove material slots
             my_obj.data.materials.clear()
+
+        # Purge unused data without user interaction
+        for img in bpy.data.images:
+            if not img.users:
+                bpy.data.images.remove(img)
             
     
         new_mat = bpy.data.materials.new(name="M_" + my_obj_name)
