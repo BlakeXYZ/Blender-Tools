@@ -33,8 +33,10 @@ class MyProperties(bpy.types.PropertyGroup):
 # OPERATORS
 
 class PrintPathOperator(bpy.types.Operator):
-    bl_idname = "myaddon.print_path"
+    bl_idname = "myaddon.print_path" # naming convention - must be lowercase
     bl_label = "Print My Path"
+    bl_options = {'UNDO'} # solves crash - "EXCEPTION_ACCESS_VIOLATION" error when trying to undo
+
     
     def execute(self, context):
         # Your file path handling logic here
@@ -48,8 +50,10 @@ class PrintPathOperator(bpy.types.Operator):
     
 
 class ImportOperator(bpy.types.Operator):
-    bl_idname = "myaddon.import"
+    bl_idname = "myaddon.import" # naming convention - must be lowercase
     bl_label = "Boilerplate Import Objects"
+    bl_options = {'UNDO'} # solves crash - "EXCEPTION_ACCESS_VIOLATION" error when trying to undo
+
     
     def execute(self, context):
         props = context.scene.myaddon_properties

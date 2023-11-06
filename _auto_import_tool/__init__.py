@@ -1,12 +1,11 @@
 bl_info = {
-    "name" : "Auto Import Tool",
-    "author" : "Blake Kostroun",
+    "name" : "Batch Asset Importer",
+    "author" : "Blake XYZ",
     "version" : (1, 0),
     "blender" : (3, 2),
-    "location" : "View 3D > Tool",
+    "location" : "View 3D > N Panel",
     "warning" : "",
-    "wiki" : "https://www.artstation.com/blakekostroun",
-    "category" : "New Addon",
+    "wiki" : "https://github.com/BlakeXYZ",
 }
 
 ###  

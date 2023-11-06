@@ -10,20 +10,20 @@ import bpy
 class MyProperties(bpy.types.PropertyGroup):
 
     my_dir_path: bpy.props.StringProperty(
-        name="Object Path",
-        description="Select Directory Path",
+        name="Asset Path",
+        description="Select Asset Directory Path",
         subtype='DIR_PATH'
     )
 
     my_dir_tex_path: bpy.props.StringProperty(
         name="Texture Path",
-        description="Select Texture Path",
+        description="Select Texture Directory Path",
         subtype='DIR_PATH'
     )
 
-    my_toggle: bpy.props.BoolProperty(
-        name="Toggle",
-        description="Toggle On Off",
+    my_tex_diff_path_toggle: bpy.props.BoolProperty(
+        name="Toggle - Texture Directory Path",
+        description="Are your Textures located in a different Folder? If so, TOGGLE ON",
         default=False,
 
     )
@@ -32,67 +32,65 @@ class MyProperties(bpy.types.PropertyGroup):
 #################################################################      
 # OPERATORS
 
-class PrintPathOperator(bpy.types.Operator):
-    bl_idname = "myaddon.print_path"
-    bl_label = "Print My Path"
-    
-    def execute(self, context):
-        # Your file path handling logic here
-        selected_dir_path = context.scene.myaddon_properties.my_dir_path
-        # You can use the selected_file_path for further operations
-        print("Selected File Path:", selected_dir_path)
-
-        print(os.listdir(selected_dir_path))
-
-        return {'FINISHED'}
-    
-
 class ImportOperator(bpy.types.Operator):
-    bl_idname = "myaddon.import"
-    bl_label = "Import Object"
+    bl_idname = "bxyz_batch_importer.import_asset" # naming convention - must be lowercase
+    bl_label = "Batch Import Assets"
+    bl_options = {'UNDO'} # solves crash - "EXCEPTION_ACCESS_VIOLATION" error when trying to undo
     
     def execute(self, context):
-        props = context.scene.myaddon_properties
+        props = context.scene.BXYZ_BATCH_IMPORTER_properties
 
         selected_dir_path = props.my_dir_path
-        toggle = props.my_toggle
-        # print(f'Printing Boolean {toggle}')
+        selected_fileNames = os.listdir(selected_dir_path)   
 
-        filePaths = os.listdir(selected_dir_path)   
-
-#TODO: EXPAND on accepted suffixes
-##          BC, ORM, N
-
-    ###
+    ####
     # CUSTOM SET VALUES
-        LIST_accepted_fileExtensions_config = ['.bmp', '.png', '.jpg', '.jpeg', '.tga', '.exr', '.tif', '.tiff']
+        DICT_accepted_asset_fileExtensions_config = {
+            '.fbx' : bpy.ops.import_scene.fbx, 
+            '.stl' : bpy.ops.import_mesh.stl, 
+            '.obj' : bpy.ops.import_scene.obj,}
+
+        LIST_accepted_tex_fileExtensions_config = ['.bmp', '.png', '.jpg', '.jpeg', '.tga', '.exr', '.tif', '.tiff']
 
         DICT_tex_suffix_nodeInput_config = [
-            {'Suffix': 'BC',    'Node Input': 'Base Color',            'Node Location':     '-500 ,    300'},
-            {'Suffix': 'ORM',   'Node Input': 'Custom Breakout',       'Node Location':     '-500 ,    000'},
-            {'Suffix': 'N',     'Node Input': 'Normal',                'Node Location':     '-500 ,    -300'},
+            {'Suffix': 'BC',    'Node Input': 'Base Color',            'Node Location':     '-700 ,    300'},
+            {'Suffix': 'ORM',   'Node Input': 'ORM',                   'Node Location':     '-700 ,    000'},
+            {'Suffix': 'N',     'Node Input': 'Normal',                'Node Location':     '-700 ,    -300'},
         ]
-    #
-    ###
-   
+   ####
+
+        # TOGGLE LOGIC, if Textures are in different path
+        if  props.my_tex_diff_path_toggle is True:
+            selected_tex_dir_path = props.my_dir_tex_path
+            selected_tex_fileNames = os.listdir(selected_tex_dir_path)  
+            print(f'selected_tex_dir_path {selected_tex_dir_path}')
+ 
+        # If TEXTURE FILES are not in Diff Path, set selected_tex info to same as 3d Object selected_ info
+        else:
+            print(f'toggle is False')
+            selected_tex_dir_path = selected_dir_path
+            selected_tex_fileNames = selected_fileNames
+
         # Run custom func store_tex_filePaths and store in DICT
-        self.DICT_stored_tex_filePaths = self.store_tex_filePaths(filePaths, selected_dir_path, LIST_accepted_fileExtensions_config, DICT_tex_suffix_nodeInput_config)
+        self.DICT_stored_tex_filePaths = self.store_tex_filePaths(selected_tex_fileNames, selected_tex_dir_path, LIST_accepted_tex_fileExtensions_config, DICT_tex_suffix_nodeInput_config)
 
-#TODO: ACCEPT MULTIPLE 3D Asset Extensions
-
-    # Loops through DIR PATH and imports ALL .FBX files 
+    ####
+    # Loops through DIR PATH and imports ALL assets that match DICT_accepted_asset_fileExtensions_config (ex: myasset.fbx or .stl)
+    # and uses matching value pair (import operator) to import asset. 
     # and RUNS function create_material()
+        for fileName in selected_fileNames:
 
-        for filePath in filePaths:
-            if filePath.endswith(".fbx"):
+            _, fileExtension = os.path.splitext(fileName)
+            if fileExtension in DICT_accepted_asset_fileExtensions_config.keys():
 
-                my_asset_filePath = filePath
-                my_asset_path = os.path.join(selected_dir_path, my_asset_filePath)
+                my_asset_fileName = fileName
+                my_asset_absPath = os.path.join(selected_dir_path, my_asset_fileName)
 
-                # Import the FBX file
-                bpy.ops.import_scene.fbx(filepath=my_asset_path)
+                import_operator = DICT_accepted_asset_fileExtensions_config[fileExtension]    # inside custom DICT: Get Import Operator that matches current fileExtension 
+                import_operator(filepath = my_asset_absPath)
 
-                self.create_material(my_asset_filePath, self.DICT_stored_tex_filePaths, DICT_tex_suffix_nodeInput_config)
+                # Import Textures and Set up NODE GRAPH for each Asset
+                self.create_material(my_asset_fileName, self.DICT_stored_tex_filePaths, DICT_tex_suffix_nodeInput_config)
 
         return {'FINISHED'}
     
@@ -102,14 +100,14 @@ class ImportOperator(bpy.types.Operator):
 # CUSTOM FUNCTIONS
 
     # Finding and Storing all files that end with _N and _BC
-    def store_tex_filePaths(self, filePaths, selected_dir_path, LIST_accepted_fileExtensions_config, DICT_tex_suffix_nodeInput_config):
+    def store_tex_filePaths(self, selected_tex_fileNames, selected_tex_dir_path, LIST_accepted_tex_fileExtensions_config, DICT_tex_suffix_nodeInput_config):
 
         DICT_stored_tex_filePaths = {}
 
-        for filePath in filePaths:
+        for fileName in selected_tex_fileNames:
 
             # SPLIT filePath extension
-            fileNameWithoutExtension, fileExtension = os.path.splitext(filePath)
+            fileNameWithoutExtension, fileExtension = os.path.splitext(fileName)
 
             # SPLIT fileName from the RIGHT by "_" and get last part as suffix
             split_file_name = fileNameWithoutExtension.rsplit("_", 1) # split only once from the right
@@ -118,18 +116,18 @@ class ImportOperator(bpy.types.Operator):
                 root, suffix = split_file_name
             except:
                 # VALIDATE if filePath contains any SUFFIX
-                print(f'SKIPPING - Selected Texture File: "{fileNameWithoutExtension}" DOES NOT CONTAIN A SUFFIX. Full file path: {filePath}')
+                print(f'SKIPPING - Selected Texture File: "{fileNameWithoutExtension}" DOES NOT CONTAIN A SUFFIX. Full file path: {fileName}')
                 continue
 
             # FILTER Folders and unaccepted File Extensions
-            if fileExtension not in LIST_accepted_fileExtensions_config:
+            if fileExtension not in LIST_accepted_tex_fileExtensions_config:
                 # print(f'SKIPPING File: "{filePath}" with FileExtension: "{fileExtension}" DOES NOT MATCH accepted_fileExtensions')
                 continue
 
             # FILTER unaccepted suffixes
             # Check if suffix matches any 'Suffix' value in the configuration
             if not any(config['Suffix'] == suffix for config in DICT_tex_suffix_nodeInput_config):
-                print(f"{filePath}'s suffix '_{suffix}' does not match any config Suffixes")
+                print(f"{fileName}'s suffix '_{suffix}' does not match any config Suffixes")
                 continue
 
             # Add new root list
@@ -137,7 +135,7 @@ class ImportOperator(bpy.types.Operator):
                 DICT_stored_tex_filePaths[root] = []
 
             # GET FULL Texture Path
-            abs_tex_filePath = os.path.join(selected_dir_path, filePath)
+            abs_tex_filePath = os.path.join(selected_tex_dir_path, fileName)
 
             # Create a dictionary entry for the current filepath root
             DICT_stored_tex_filePaths[root].append({
@@ -155,27 +153,28 @@ class ImportOperator(bpy.types.Operator):
         print(f'my_asset_filePath - {my_asset_filePath}')
 
         # Create a new material
-        my_obj = bpy.context.selected_objects[0]
-        my_obj_name = my_obj.name
+        my_asset = bpy.context.selected_objects[0]
+        my_asset_name = my_asset.name
 
-    ###
+    ####
     # CLEAN UP IMPORTED ASSET
-        if my_obj.data.materials:
+        if my_asset.data.materials:
             # remove imported materials
-            for material in my_obj.data.materials:
+            for material in my_asset.data.materials:
                 bpy.data.materials.remove(material, do_unlink=True)
             # remove material slots
-            my_obj.data.materials.clear()
+            my_asset.data.materials.clear()
 
         # Purge unused images without user interaction
         for img in bpy.data.images:
             if not img.users:
                 bpy.data.images.remove(img)
-    ###
-            
-        new_mat = bpy.data.materials.new(name="M_" + my_obj_name)
+    ####
+        
+        # Build New Material for current Asset
+        new_mat = bpy.data.materials.new(name="M_" + my_asset_name) 
 
-    #########
+    ####
     # IMPORT TEXTURES AND CONNECT TO MATERIAL
 
         # Setup connection to Node tree
@@ -189,7 +188,14 @@ class ImportOperator(bpy.types.Operator):
                 principled_bsdf = node
                 break
 
-        # Iterate through the file groups and print configuration
+
+        ####
+        # BATCH IMPORT TEXTURES AND BUILD NODE GRAPH
+
+        # Build NODE String Names
+        BC_AO_Mix_Node_Name = 'BC_AO_Multiply'
+
+
         for root_group, files in DICT_stored_tex_filePaths.items():
             for file_info in files:
                 abs_tex_filePath = file_info["abs_tex_filePath"]
@@ -198,7 +204,7 @@ class ImportOperator(bpy.types.Operator):
 
                 # VALIDATE 3D ASSET has same 'ROOT' name as imported tex_filePath's root_group
                 if not my_asset_filePath.startswith(root_group):
-                    print(f'{tex_file_name} root does not match {my_asset_filePath} root')
+                    # print(f'{tex_file_name} root does not match {my_asset_filePath} root')
                     continue
                     
                 # Loop through the config to find matching DICT info for current current suffix
@@ -210,77 +216,94 @@ class ImportOperator(bpy.types.Operator):
                         break
 
                 # Create a texture node
-                texture_node = node_tree.nodes.new(type='ShaderNodeTexImage')
-
+                current_texture_node = node_tree.nodes.new(type='ShaderNodeTexImage')
                 # Attach image to texture_node
-                texture_node.image =  bpy.data.images.load(abs_tex_filePath)
+                current_texture_node.image =  bpy.data.images.load(abs_tex_filePath)
 
-                # Link the texture to the roughness input
-                node_tree.links.new(texture_node.outputs['Color'], principled_bsdf.inputs[matching_nodeInput])
+                # node_tree.links.new(texture_node.outputs['Color'], principled_bsdf.inputs[matching_nodeInput])
+
+            #######
+            ####
+            # BUILD NODE GRAPH && CONNECT NODES
+                if matching_nodeInput == 'Base Color':
+                    # Build MIX RGB Node
+                    BC_AO_mix_rgb_node = node_tree.nodes.new(type='ShaderNodeMixRGB')
+                    BC_AO_mix_rgb_node.location = (-200 , 250)  # Adjust the location as needed
+                    BC_AO_mix_rgb_node.blend_type = 'MULTIPLY'
+                    BC_AO_mix_rgb_node.inputs['Fac'].default_value = 0.2
+                    BC_AO_mix_rgb_node.inputs['Color2'].default_value = (1,1,1,1)
+                    BC_AO_mix_rgb_node.name =     BC_AO_Mix_Node_Name     # Critical, for selection later (ex. mix_rgb_node = node_tree.nodes.get(BC_AO_Mix_Node_Name)
+                    BC_AO_mix_rgb_node.label =    BC_AO_Mix_Node_Name     # Non critical, easy to read graph
+
+                    # Connect BC Tex to MIX RGB, and MIX RGB to principled bsdf input
+                    node_tree.links.new(current_texture_node.outputs['Color'], BC_AO_mix_rgb_node.inputs['Color1'])
+                    node_tree.links.new(BC_AO_mix_rgb_node.outputs['Color'], principled_bsdf.inputs['Base Color'])
 
                 # If NOT Base Color, change node color space to Non-Color
                 if matching_nodeInput != 'Base Color':
-                    texture_node.image.colorspace_settings.name = 'Non-Color'
+                    current_texture_node.image.colorspace_settings.name = 'Non-Color'
 
                 # INSERT Normal Map node between Normal Tex and Principled BSDF input 
                 if matching_nodeInput == 'Normal':
                     # Build normal map node
                     normal_map_node = node_tree.nodes.new(type='ShaderNodeNormalMap')
                     normal_map_node.location = (-200 , -300)  # Adjust the location as needed
+
                     # reconnect links
-                    node_tree.links.new(texture_node.outputs['Color'], normal_map_node.inputs['Color'])
+                    node_tree.links.new(current_texture_node.outputs['Color'], normal_map_node.inputs['Color'])
                     node_tree.links.new(normal_map_node.outputs['Normal'], principled_bsdf.inputs['Normal'])
 
+                if matching_nodeInput == 'ORM':
+                    # Build SEPARATE RGB
+                    sep_rgb_node = node_tree.nodes.new(type='ShaderNodeSeparateRGB')
+                    sep_rgb_node.location = (-400 , 000)  # Adjust the location as needed
+
+                    # Connect ORM Color to SEPARATE RGB
+                    node_tree.links.new(current_texture_node.outputs['Color'], sep_rgb_node.inputs['Image'])
+
+                    # SEPARATE RGB - Red to Multiply Mix RGB - BC_AO_Mix_Node
+                    BC_AO_mix_rgb_node = node_tree.nodes.get(BC_AO_Mix_Node_Name)
+                    node_tree.links.new(sep_rgb_node.outputs['R'], BC_AO_mix_rgb_node.inputs['Color2'])
+                    # SEPARATE RGB - Green to principled_bsdf.inputs['Roughness']
+                    node_tree.links.new(sep_rgb_node.outputs['G'], principled_bsdf.inputs['Roughness'])
+                    # SEPARATE RGB - Red to principled_bsdf.inputs['Metallic']
+                    node_tree.links.new(sep_rgb_node.outputs['B'], principled_bsdf.inputs['Metallic'])
+                ####
+                #######
+
                 # Adjust the texture's location and other properties if necessary
-                texture_node.location = (node_location)  # Adjust the location as needed
+                current_texture_node.location = (node_location)  # Adjust the location as needed
 
         # Get object by its name AND append material
-        my_obj.data.materials.append(new_mat)
+        my_asset.data.materials.append(new_mat)
 
     
     
 #################################################################      
 # UI PANELS
 
-class MYADDON_PT_PanelInfo:
-    bl_category = "Auto Import Tool"
+class BXYZ_BATCH_IMPORTER_PT_PanelInfo:
+    bl_category = "Batch Asset Importer"
     bl_space_type = "VIEW_3D"
     bl_region_type = "UI"  
 
-class MYADDON_PT_MyUIPanel(MYADDON_PT_PanelInfo, bpy.types.Panel):
-    bl_label = "My UI Panel"
+class BXYZ_BATCH_IMPORTER_PT_MyUIPanel(BXYZ_BATCH_IMPORTER_PT_PanelInfo, bpy.types.Panel):
+    bl_label = "Batch Asset Importer"
     bl_idname = "MYADDON_PT_MyUIPanel"
     
     def draw(self, context):
         layout = self.layout
-        props = context.scene.myaddon_properties
+        props = context.scene.BXYZ_BATCH_IMPORTER_properties
         
         layout.prop(props, "my_dir_path")
 
         # Create a boolean property
-        layout.prop(props, "my_toggle", text="Are Texture Files in Different Path?")
+        layout.prop(props, "my_tex_diff_path_toggle", text="Are Texture Files in Different Path?")
 
         # IF Texture Files are in Different Path, prompt user to select "my_dir_tex_path"
-        if props.my_toggle:
+        if props.my_tex_diff_path_toggle:
             layout.prop(props, "my_dir_tex_path")
 
-        layout.operator("myaddon.print_path")
-        layout.operator("myaddon.import")
-
- 
+        layout.operator("bxyz_batch_importer.import_asset")
 
 
-
-
-
-
-
-
-    # # Iterate through the file groups and print configuration
-        # for root_group, files in DICT_stored_tex_filePaths.items():
-        #     print(f'=== Root Group: {root_group}')
-        #     for file_info in files:
-        #         print(f'abs_tex_filePath:          {file_info["abs_tex_filePath"]}')
-        #         print(f'File Name:                  {file_info["fileName"]}')
-        #         print(f'Suffix:                     {file_info["suffix"]}')
-        #         print('-')
