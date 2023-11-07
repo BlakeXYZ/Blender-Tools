@@ -103,7 +103,7 @@ ____________
 ______
 ## <ins>Documentation</ins>
 
-#### Shader Graph Build
+#### Shader Graph
 
 - _BC, _N, _ORM Textures are imported and Node System is created for each Asset
 
