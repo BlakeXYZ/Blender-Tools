@@ -3,13 +3,15 @@
 ## <ins>Overview</ins>
 
 <div align="center">
-Provide a brief introduction or overview of what your tool accomplishes. Explain its purpose and why someone might want to use it.
+Batch import 3d Assets + Textures and dynamically build Shader Graph per Asset using imported Textures.
 </div>
 
 #### Pipeline Problem:
+ - Manually setting up a PBR Material for an Asset is a clunky and time consuming process. For each Asset user must: File > Import Panel, jump into Shader Graph, import each PBR Texture and then build the Shader graph with correct PBR Node layout. The 'Batch Asset Importer' tool automates these steps, now the user only needs to select Folder(s) that contain Assets + respective Textures and press 'Batch Import Assets'.
 
 
 #### Built with:
+ - Blender embedded Python 3.10.1
 
 
 ______
@@ -30,6 +32,7 @@ Describe how to use your tool. Include examples or code snippets to illustrate c
    
 <img src="https://github.com/BlakeXYZ/Unreal-Engine-Tools/assets/37947050/2f0ccaa9-be51-4b83-b4d6-8cdfcd959654" width="700">
 </p>
+
 ______
 ## <ins>Documentation</ins>
 
