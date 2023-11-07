@@ -1,14 +1,14 @@
 bl_info = {
-    "name" : "Boiler Plate Tool",
-    "author" : "Blake Kostroun",
-    "version" : (1, 0),
-    "blender" : (3, 2),
-    "location" : "View 3D > Tool",
+    "name" : "Boiler plate",
+    "author" : "Blake XYZ",
+    "description" : "Yee Haw!",
+    "blender" : (3, 2, 0),
+    "version" : (1, 0, 0),
+    "location" : "",
     "warning" : "",
-    "wiki" : "https://www.artstation.com/blakekostroun",
-    "category" : "New Addon",
+    "wiki" : "https://github.com/BlakeXYZ",
+    "category" : "Tools"
 }
-
 ###  
 ######      
 ###########################################################  

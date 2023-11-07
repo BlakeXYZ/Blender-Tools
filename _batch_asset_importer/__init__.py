@@ -1,13 +1,13 @@
 bl_info = {
     "name" : "Batch Asset Importer",
     "author" : "Blake XYZ",
-    "version" : (1, 0),
-    "blender" : (3, 2),
-    "location" : "View 3D > N Panel",
+    "description" : "Batch import 3d Assets + Textures and dynamically build Shader Graph per Asset using imported Textures.",
+    "blender" : (3, 2, 0),
+    "version" : (1, 0, 0),
+    "location" : "",
     "warning" : "",
     "wiki" : "https://github.com/BlakeXYZ",
-    "category" : "Tools",
-
+    "category" : "Tools"
 }
 
 ###  
