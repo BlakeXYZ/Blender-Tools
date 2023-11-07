@@ -48,6 +48,8 @@ ______
 ____________
 ## <ins>Quick Start</ins>
 
+> :information_source: Follow along with downloaded 'import_examples' folder
+
 #### Tool Vocabulary
 
 - **_(3d) Asset_** : Packaged 3d File with complete PBR workflow.
@@ -86,6 +88,9 @@ ____________
 - Asset and Texture files do not need to sit in same Folder
 > ☑️ Toggle on 'Are Texture Files in Different Path?' and select Texture File Location if above is True.
 
+<p align="center">
+<img src="https://github.com/BlakeXYZ/Blender-Tools/assets/37947050/efbc4299-1a1a-47cf-b898-0d89bf95a86e" width="700">
+</p>
 
 
 ______
