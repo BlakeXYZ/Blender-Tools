@@ -32,27 +32,24 @@ ______
 <img src="https://github.com/BlakeXYZ/Blender-Tools/assets/37947050/e46e7e37-e0cf-4601-b022-dfe3dd2aaa09" width="700">
 </p>
 
+<br>
 
+   4. Navigate inside unzipped 'Blender-Tools-main' folder and select '**batch_asset_importer.zip**' and click Install Add-On
+<p align="center">
+<img src="https://github.com/BlakeXYZ/Blender-Tools/assets/37947050/1bd89817-9221-4b3f-8539-36757cffce1d" width="700">
+</p>
+<br>
 
-> ❗ If your /scripts path already contains custom userSetup.py, copy paste '**_your_daily_fun_fact**' userSetup.py **<em>code</em>** to prevent overwriting 
-     
-   Windows
-```
-\Users\USERNAME\Documents\maya\MAYAVRSION\scripts
-```
+   5. Toggle On Add-On ☑️, a new Tab should be available now inside the N-Panel (Press N to open in 3D View)
+<p align="center">
+<img src="https://github.com/BlakeXYZ/Blender-Tools/assets/37947050/25e668b6-9d34-48e8-a22a-52e863736872" width="700">
+</p>
+
 ____________
 ## <ins>Quick Start</ins>
 
 Describe how to use your tool. Include examples or code snippets to illustrate common use cases. Explain any command-line options, configuration settings, or parameters that users need to be aware of.
 
-<div align="center">Batch Automate moving of Assets into new Folders based on User selected Assets and User input Folder names.
-</div>
-<br>
-
-<p align="center">
-   
-<img src="https://github.com/BlakeXYZ/Unreal-Engine-Tools/assets/37947050/2f0ccaa9-be51-4b83-b4d6-8cdfcd959654" width="700">
-</p>
 
 ______
 ## <ins>Documentation</ins>
