@@ -48,7 +48,44 @@ ______
 ____________
 ## <ins>Quick Start</ins>
 
-Describe how to use your tool. Include examples or code snippets to illustrate common use cases. Explain any command-line options, configuration settings, or parameters that users need to be aware of.
+#### Tool Vocabulary
+
+- **_(3d) Asset_** : Packaged 3d File with complete PBR workflow.
+- **_Root Pattern_** : User Naming Convention on Assets/Textures, anything before last '_' (underscore) is stored as root.
+- **_Suffix Pattern_** : User Naming Convention on Textures, anything after last '_' (underscore) is stored as suffix.
+  <br>
+> ex: Glassy_Crystal_BC.png, root = 'Glassy_Crystal'  suffix = 'BC'
+
+  <br>
+
+#### File Extension Support
+
+- **_Assets_** : [.fbx, .obj, .stl]
+- **_Textures_** : [.bmp, .png, .jpg, .jpeg, .tga, .exr, .tif, .tiff]
+  <br>
+  <br>
+  
+#### Naming Convention Requirements
+
+- The tool builds Materials based on Assets and Textures with matching **_Root Pattern_**.
+- **_Root Pattern_** is determined by Asset Name
+- Textures must only contain **_Root Pattern_** + **_Suffix Pattern_**
+> :information_source: Texture **_Suffix Patterns_** currently supported:
+  > _BC, _N, _ORM (packed occlusion, roughness, metalness)
+  
+<p align="center">
+<img src="https://github.com/BlakeXYZ/Blender-Tools/assets/37947050/14a29d35-ef3c-4a69-8e29-57ea072b76a0" width="500">
+</p>
+
+  <br>
+
+#### File Location Requirements
+
+- Asset Files must be in one Folder
+- Texture Files must be in one Folder
+- Asset and Texture files do not need to sit in same Folder
+> ☑️ Toggle on 'Are Texture Files in Different Path?' and select Texture File Location if above is True.
+
 
 
 ______
