@@ -17,8 +17,29 @@ Batch import 3d Assets + Textures and dynamically build Shader Graph per Asset u
 ______
 ## <ins>Installation</ins>
 
-Explain how to install or set up your tool. Include any prerequisites or dependencies that need to be installed before using the tool. Provide step-by-step instructions if necessary.
+   1. Download '[Blender-Tools](https://github.com/BlakeXYZ/Blender-Tools/tree/main)' Repo
 
+<p align="center">
+<img src="https://github.com/BlakeXYZ/Blender-Tools/assets/37947050/5ac0e8ae-e826-4113-8e1a-6deba5bcf83a" width="700">
+</p>
+
+
+
+   2. Unzip '**Blender-Tools-main.zip**'
+   3. Open **Blender** and navigate to install Add-on: <br>
+      - Edit > Preferences > Add-ons > Install...
+<p align="center">
+<img src="https://github.com/BlakeXYZ/Blender-Tools/assets/37947050/e46e7e37-e0cf-4601-b022-dfe3dd2aaa09" width="700">
+</p>
+
+
+
+> ❗ If your /scripts path already contains custom userSetup.py, copy paste '**_your_daily_fun_fact**' userSetup.py **<em>code</em>** to prevent overwriting 
+     
+   Windows
+```
+\Users\USERNAME\Documents\maya\MAYAVRSION\scripts
+```
 ____________
 ## <ins>Quick Start</ins>
 
@@ -37,3 +58,9 @@ ______
 ## <ins>Documentation</ins>
 
 Provide a link to more detailed documentation if it exists. This could be a link to a separate documentation file or an external website. Include information on where users can find additional resources, tutorials, or support.
+
+<p align="center">
+<img src="" width="700">
+</p>
+
+
