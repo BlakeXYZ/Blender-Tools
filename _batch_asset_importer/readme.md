@@ -48,7 +48,7 @@ ______
 ____________
 ## <ins>Quick Start</ins>
 
-> :information_source: Follow along with downloaded 'import_examples' folder
+> :information_source: Follow along using downloaded 'import_examples' folder
 
 #### Tool Vocabulary
 
