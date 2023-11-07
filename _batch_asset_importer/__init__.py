@@ -6,6 +6,8 @@ bl_info = {
     "location" : "View 3D > N Panel",
     "warning" : "",
     "wiki" : "https://github.com/BlakeXYZ",
+    "category" : "Tools",
+
 }
 
 ###  
