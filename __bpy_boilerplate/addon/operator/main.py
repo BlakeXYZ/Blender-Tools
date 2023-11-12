@@ -2,6 +2,19 @@ import os
 import bpy
 
 
+class ValidationError(Exception):
+    pass
+
+
+### RAISE VALIDATION example
+# # CHECK if number of selected assets is ONE
+# if len(selected_assets) != 1:
+#     raise ValidationError(f'Please select only 1 Master Material in Content Browser')
+
+
+
+
+
 
 #################################################################      
 # SCENE PROPERTIES
