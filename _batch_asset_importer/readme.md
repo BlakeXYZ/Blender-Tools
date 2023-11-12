@@ -6,6 +6,13 @@
 Batch import 3d Assets + Textures and dynamically build Shader Graph per Asset using imported Textures.
 </div>
 
+
+<br>
+
+<p align="center">
+<img src="https://github.com/BlakeXYZ/Blender-Tools/assets/37947050/48273626-04d4-4c46-9808-983f02efa1d3" width="700">
+</p>
+
 #### Pipeline Problem:
  - Manually setting up a PBR Material for an Asset is a clunky and time consuming process. For each Asset user must: File > Import Panel, jump into Shader Graph, import each PBR Texture and then build the Shader graph with correct PBR Node layout. The 'Batch Asset Importer' tool automates these steps, now the user only needs to select Folder(s) that contain Assets + respective Textures and press 'Batch Import Assets'.
 
@@ -96,10 +103,10 @@ ____________
 ______
 ## <ins>Documentation</ins>
 
-Provide a link to more detailed documentation if it exists. This could be a link to a separate documentation file or an external website. Include information on where users can find additional resources, tutorials, or support.
+#### Shader Graph
+
+- _BC, _N, _ORM Textures are imported and Node System is created for each Asset
 
 <p align="center">
-<img src="" width="700">
+<img src="https://github.com/BlakeXYZ/Blender-Tools/assets/37947050/302b86b5-b3b5-4563-850c-f10356fef79a" width="700">
 </p>
-
-
